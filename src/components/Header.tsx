@@ -11,6 +11,7 @@ interface HeaderProps {
   userProfile: { displayName: string; role: 'Student' | 'Admin'; title: string } | null;
   onLogout: () => void;
   onOpenAuth: (role: 'Student' | 'Admin') => void;
+  onShowNotice?: (title: string, message: string) => void;
 }
 
 export default function Header({
@@ -21,7 +22,8 @@ export default function Header({
   streakDays,
   userProfile,
   onLogout,
-  onOpenAuth
+  onOpenAuth,
+  onShowNotice
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white">
@@ -78,11 +80,26 @@ export default function Header({
           </button>
 
           <button
+            onClick={() => setCurrentTab('calculator')}
+            className={`relative text-sm font-medium tracking-tight h-16 flex items-center transition-colors cursor-pointer ${
+              currentTab === 'calculator'
+                ? 'text-[#831B84] border-b-2 border-[#831B84]'
+                : 'text-gray-500 hover:text-black'
+            }`}
+            id="nav-tab-calculator"
+          >
+            <span>Subnet Calculator</span>
+          </button>
+
+          <button
             onClick={() => {
               if (isAdminMode) {
                 setCurrentTab('admin');
-              } else {
-                alert("Mentorship Portal: Connect with Marc van Holst or Sophia Henderson for 1-on-1 architecture reviews. (Admin mode unlocks full squad tracking logs)");
+              } else if (onShowNotice) {
+                onShowNotice(
+                  "Mentorship Portal",
+                  "Connect with Marc van Holst or Sophia Henderson for 1-on-1 architecture reviews. (Admin mode unlocks full squad tracking logs)"
+                );
               }
             }}
             className={`relative text-sm font-medium tracking-tight h-16 flex items-center transition-colors cursor-pointer ${

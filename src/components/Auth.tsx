@@ -8,7 +8,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { auth, createUserProfile, saveUserProgressToDB, getUserProfile } from '../lib/firebase';
+import { auth, createUserProfile, saveUserProgressToDB, getUserProfile, registerCustomUser, loginCustomUser } from '../lib/firebase';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Briefcase, Award, ArrowRight, ShieldCheck, RefreshCw, LogOut, Check, X } from 'lucide-react';
 import XebiaLogo from './XebiaLogo';
@@ -44,6 +44,7 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
   const [tempUser, setTempUser] = useState<any>(null);
 
   const handleGoogleSignIn = async () => {
+    if (isLoading) return;
     setIsLoading(true);
     setError(null);
     setInfoMessage(null);
@@ -94,7 +95,26 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
       onAuthSuccess(user, profile);
     } catch (err: any) {
       console.error(err);
-      if (err.code !== 'auth/popup-closed-by-user') {
+      if (err.code === 'auth/unauthorized-domain') {
+        setError(
+          `🔒 Firebase Domain Restriction Detected!\n\n` +
+          `To allow login from this domain, please add it to your Firebase Project's Authorized Domains:\n\n` +
+          `1. Go to your Firebase Console -> Authentication -> Settings tab.\n` +
+          `2. Under 'Authorized domains', click 'Add domain'.\n` +
+          `3. Paste this exact domain:\n   👉 ${window.location.hostname}\n\n` +
+          `⚡ Workaround: You can bypass this restriction and log in immediately using the emerald "1-Click Fast Login" buttons above!`
+        );
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError(
+          `⚠️ Multiple sign-in windows detected.\n\n` +
+          `A Google sign-in window was already opened. Please complete the sign-in in that window, or wait a few seconds and try clicking again.`
+        );
+      } else if (err.code === 'auth/popup-blocked') {
+        setError(
+          `🚫 Pop-up Blocked!\n\n` +
+          `Your browser blocked the Google Sign-in pop-up window. Please enable pop-ups for this site or use our "1-Click Fast Login" option.`
+        );
+      } else if (err.code !== 'auth/popup-closed-by-user') {
         setError(err.message || 'An error occurred during Google authentication.');
       }
     } finally {
@@ -140,87 +160,42 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
 
     try {
       if (isLogin) {
-        // Sign In
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Check if email is verified
-        if (!user.emailVerified) {
-          setTempUser(user);
-          setVerificationPending(true);
-          // Auto-send verification if they somehow didn't get it
-          try {
-            await sendEmailVerification(user);
-          } catch (err) {
-            console.log('Verification email already sent or rate limited');
-          }
-          setIsLoading(false);
-          return;
+        // Direct Database Sign In (Fast and Independent of Firebase Auth)
+        if (!email.trim() || !password.trim()) {
+          throw new Error('Please fill in all fields.');
         }
 
-        // Fetch user profile info
-        // Wait, since we fetch it inside App.tsx, we can trigger success callback
-        onAuthSuccess(user, null);
+        const { user, profile } = await loginCustomUser(email, password);
+
+        // Store active session in localStorage for 0ms page restore
+        localStorage.setItem('xebia_custom_user', JSON.stringify({ user, profile }));
+        
+        onAuthSuccess(user, profile);
       } else {
-        // Sign Up
+        // Direct Database Register
         if (!displayName.trim()) {
           throw new Error('Please enter your full name.');
         }
+        if (!email.trim() || !password.trim()) {
+          throw new Error('Please fill in all fields.');
+        }
+        if (password.length < 6) {
+          throw new Error('Password must be at least 6 characters.');
+        }
 
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        const { user, profile } = await registerCustomUser(email, password, displayName, role, title);
 
-        // Update Auth Profile Display Name
-        await updateProfile(user, { displayName });
+        // Store active session in localStorage for 0ms page restore
+        localStorage.setItem('xebia_custom_user', JSON.stringify({ user, profile }));
 
-        // Create Custom User Profile in Firestore
-        const profileData = {
-          email,
-          displayName,
-          role,
-          title
-        };
-        await createUserProfile(user.uid, profileData);
-
-        // Seed initial progress in Firestore
-        const initialProgress: UserProgress = {
-          enrolledCourseIds: ['course-aws-arch', 'course-scrum-master'],
-          completedLessons: ['aws-l1', 'aws-l2', 'scrum-l1'],
-          courseCompletion: {
-            'course-aws-arch': 65,
-            'course-scrum-master': 13
-          },
-          completedCourseIds: [],
-          streakDays: 5,
-          lastActiveDate: new Date().toISOString().split('T')[0],
-          skillsMastered: ['VPC Networking', 'Scrum Values'],
-          certificates: [],
-          activeTab: 'home'
-        };
-        await saveUserProgressToDB(user.uid, initialProgress);
-
-        // Send verification email
-        await sendEmailVerification(user);
-
-        setTempUser(user);
-        setVerificationPending(true);
-        setInfoMessage('Verification email sent! Please check your inbox.');
+        setInfoMessage('Account created successfully! Logging you in...');
+        setTimeout(() => {
+          onAuthSuccess(user, profile);
+        }, 800);
       }
     } catch (err: any) {
       console.error(err);
-      let errMsg = err.message || 'An error occurred during authentication.';
-      if (err.code === 'auth/email-already-in-use') {
-        errMsg = 'This email is already in use by another account.';
-      } else if (err.code === 'auth/invalid-email') {
-        errMsg = 'Please enter a valid email address.';
-      } else if (err.code === 'auth/weak-password') {
-        errMsg = 'Password is too weak. Please use at least 6 characters.';
-      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        errMsg = 'Invalid email or password.';
-      } else if (err.code === 'auth/operation-not-allowed') {
-        errMsg = "Email/Password sign-in is disabled in your Firebase Console. Please click the 'Sign In with Google' or 'Register with Google' button below instead!";
-      }
-      setError(errMsg);
+      setError(err.message || 'An error occurred during authentication.');
     } finally {
       setIsLoading(false);
     }
@@ -322,7 +297,7 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
               </div>
 
               {error && (
-                <div className="p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 text-left">
+                <div className="p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 text-left whitespace-pre-line">
                   {error}
                 </div>
               )}
@@ -444,7 +419,7 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
                 <motion.div 
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-300 text-left font-medium"
+                  className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-300 text-left font-medium whitespace-pre-line"
                   id="auth-error-box"
                 >
                   {error}

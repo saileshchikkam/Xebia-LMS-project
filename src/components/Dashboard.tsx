@@ -12,6 +12,7 @@ interface DashboardProps {
   onNavigateToCatalog: () => void;
   userProfile: { displayName: string; role: 'Student' | 'Admin'; title: string } | null;
   onOpenAuth?: (role: 'Student' | 'Admin') => void;
+  onShowNotice?: (title: string, message: string) => void;
 }
 
 export default function Dashboard({
@@ -19,7 +20,8 @@ export default function Dashboard({
   onSelectCourse,
   onNavigateToCatalog,
   userProfile,
-  onOpenAuth
+  onOpenAuth,
+  onShowNotice
 }: DashboardProps) {
   
   // Handlers to link Dashboard actions with real app features!
@@ -291,7 +293,12 @@ export default function Dashboard({
                   onOpenAuth?.('Student');
                   return;
                 }
-                alert(`Leaderboard: ${userProfile.displayName || 'Sarah Jenkins'} is currently ranked #3 in the enterprise cohort with 2,450 points! Keep completing pathways to reach #1.`);
+                if (onShowNotice) {
+                  onShowNotice(
+                    "Cohort Leaderboard",
+                    `Leaderboard: ${userProfile.displayName || 'Sarah Jenkins'} is currently ranked #3 in the enterprise cohort with 2,450 points! Keep completing pathways to reach #1.`
+                  );
+                }
               }}
               className="relative z-10 w-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 rounded-xl transition-all cursor-pointer font-sans"
             >

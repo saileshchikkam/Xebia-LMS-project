@@ -6,10 +6,11 @@ import CoursePlayer from './components/CoursePlayer';
 import Dashboard from './components/Dashboard';
 import AdminAnalytics from './components/AdminAnalytics';
 import AssessmentEngine from './components/AssessmentEngine';
+import SubnetCalculator from './components/SubnetCalculator';
 import { Course, UserProgress } from './types';
 import { COURSES } from './data';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, GraduationCap, ShieldAlert } from 'lucide-react';
+import { BookOpen, GraduationCap, ShieldAlert, Sparkles } from 'lucide-react';
 import XebiaLogo from './components/XebiaLogo';
 import XebiaLiveBackground from './components/XebiaLiveBackground';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -46,15 +47,48 @@ export default function App() {
   const [showAuthOverlay, setShowAuthOverlay] = useState<boolean>(false);
   const [authOverlayRole, setAuthOverlayRole] = useState<'Student' | 'Admin'>('Student');
 
+  // Custom polished safe in-app notice dialog
+  const [noticeModal, setNoticeModal] = useState<{ isOpen: boolean; title: string; message: string }>({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
+
   const handleOpenAuth = (role: 'Student' | 'Admin') => {
     setAuthOverlayRole(role);
     setShowAuthOverlay(true);
   };
 
-  // Auth State Listener
+  const handleShowNotice = (title: string, message: string) => {
+    setNoticeModal({ isOpen: true, title, message });
+  };
+
+  // Auth State Listener (Checks local session cache first for fast 0ms restores)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // Check if we have a demo session active
+    const restoreSession = async () => {
+      // 1. Check if we have a custom database session active (Instant)
+      const savedCustom = localStorage.getItem('xebia_custom_user');
+      if (savedCustom) {
+        try {
+          const { user, profile } = JSON.parse(savedCustom);
+          setCurrentUser(user);
+          setUserProfile(profile);
+          setIsAdminMode(profile.role === 'Admin');
+          
+          const progress = await getUserProgressFromDB(user.uid);
+          if (progress) {
+            setUserProgress(progress);
+          } else {
+            setUserProgress(INITIAL_PROGRESS);
+          }
+          setIsAuthLoading(false);
+          return;
+        } catch (e) {
+          console.error("Failed to restore custom database session:", e);
+        }
+      }
+
+      // 2. Check if we have a demo session active
       const savedDemo = localStorage.getItem('xebia_demo_user');
       if (savedDemo) {
         try {
@@ -76,51 +110,54 @@ export default function App() {
         }
       }
 
-      if (firebaseUser && firebaseUser.emailVerified) {
-        setCurrentUser(firebaseUser);
-        
-        // Fetch user custom profile details
-        let profile = await getUserProfile(firebaseUser.uid);
-        if (!profile) {
-          profile = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            displayName: firebaseUser.displayName || 'Enterprise Learner',
-            role: 'Student',
-            title: 'Senior Cloud Architect',
-            createdAt: new Date().toISOString()
-          };
-          try {
-            await createUserProfile(firebaseUser.uid, {
-              email: profile.email,
-              displayName: profile.displayName,
-              role: profile.role,
-              title: profile.title
-            });
-          } catch (e) {
-            console.error("Failed to auto-create user profile in auth listener:", e);
+      // 3. Fallback to standard Firebase Auth if no fast local session exists
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser && firebaseUser.emailVerified) {
+          setCurrentUser(firebaseUser);
+          
+          let profile = await getUserProfile(firebaseUser.uid);
+          if (!profile) {
+            profile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || 'Enterprise Learner',
+              role: 'Student',
+              title: 'Senior Cloud Architect',
+              createdAt: new Date().toISOString()
+            };
+            try {
+              await createUserProfile(firebaseUser.uid, {
+                email: profile.email,
+                displayName: profile.displayName,
+                role: profile.role,
+                title: profile.title
+              });
+            } catch (e) {
+              console.error("Failed to auto-create user profile in auth listener:", e);
+            }
           }
-        }
-        setUserProfile(profile);
+          setUserProfile(profile);
 
-        // Fetch progress from database
-        const progress = await getUserProgressFromDB(firebaseUser.uid);
-        if (progress) {
-          setUserProgress(progress);
+          const progress = await getUserProgressFromDB(firebaseUser.uid);
+          if (progress) {
+            setUserProgress(progress);
+          } else {
+            await saveUserProgressToDB(firebaseUser.uid, INITIAL_PROGRESS);
+            setUserProgress(INITIAL_PROGRESS);
+          }
         } else {
-          await saveUserProgressToDB(firebaseUser.uid, INITIAL_PROGRESS);
+          setCurrentUser(null);
+          setUserProfile(null);
           setUserProgress(INITIAL_PROGRESS);
+          setIsAdminMode(false);
         }
-      } else {
-        setCurrentUser(null);
-        setUserProfile(null);
-        setUserProgress(INITIAL_PROGRESS);
-        setIsAdminMode(false);
-      }
-      setIsAuthLoading(false);
-    });
+        setIsAuthLoading(false);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    };
+
+    restoreSession();
   }, []);
 
   // Synchronize progress to Firestore on changes
@@ -128,7 +165,7 @@ export default function App() {
     if (currentUser && !isAuthLoading && userProgress) {
       if (currentUser.uid.startsWith('demo-')) {
         localStorage.setItem(`xebia_progress_${currentUser.uid}`, JSON.stringify(userProgress));
-      } else if (currentUser.emailVerified) {
+      } else {
         const syncProgress = async () => {
           try {
             await saveUserProgressToDB(currentUser.uid, userProgress);
@@ -148,6 +185,7 @@ export default function App() {
     try {
       setIsAuthLoading(true);
       localStorage.removeItem('xebia_demo_user');
+      localStorage.removeItem('xebia_custom_user');
       await signOut(auth);
       setCurrentUser(null);
       setUserProfile(null);
@@ -294,6 +332,7 @@ export default function App() {
         userProfile={userProfile}
         onLogout={handleLogout}
         onOpenAuth={handleOpenAuth}
+        onShowNotice={handleShowNotice}
       />
 
       {/* Main Container Wrapper */}
@@ -327,6 +366,7 @@ export default function App() {
                   onNavigateToCatalog={() => setCurrentTab('catalog')}
                   userProfile={userProfile}
                   onOpenAuth={handleOpenAuth}
+                  onShowNotice={handleShowNotice}
                 />
               </div>
             )}
@@ -384,6 +424,13 @@ export default function App() {
                   isAuthenticated={!!currentUser}
                   onOpenAuth={handleOpenAuth}
                 />
+              </div>
+            )}
+
+            {/* TAB: INTERACTIVE VPC SUBNET & STREAK CALCULATOR */}
+            {currentTab === 'calculator' && (
+              <div id="subnet-calculator-tab-view">
+                <SubnetCalculator />
               </div>
             )}
 
@@ -512,6 +559,45 @@ export default function App() {
                   setIsAuthLoading(false);
                 }}
               />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Custom Notice Modal Popup Overlay */}
+      <AnimatePresence>
+        {noticeModal.isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+            id="notice-modal-overlay"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 text-left space-y-4"
+            >
+              <div className="flex items-center space-x-3 pb-3 border-b border-slate-100">
+                <span className="p-2 bg-purple-50 text-xebia-purple rounded-xl">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <h4 className="text-base font-bold text-slate-900 font-sans">{noticeModal.title}</h4>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed font-serif italic">
+                {noticeModal.message}
+              </p>
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setNoticeModal({ isOpen: false, title: '', message: '' })}
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+                >
+                  Dismiss Message
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
