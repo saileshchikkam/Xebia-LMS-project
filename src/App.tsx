@@ -13,8 +13,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, GraduationCap, ShieldAlert, Sparkles } from 'lucide-react';
 import XebiaLogo from './components/XebiaLogo';
 import XebiaLiveBackground from './components/XebiaLiveBackground';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth, getUserProfile, getUserProgressFromDB, saveUserProgressToDB, createUserProfile } from './lib/firebase';
 import Auth from './components/Auth';
 
 // Seeding standard progress for excellent starting UX
@@ -65,7 +63,7 @@ export default function App() {
 
   // Auth State Listener (Checks local session cache first for fast 0ms restores)
   useEffect(() => {
-    const restoreSession = async () => {
+    const restoreSession = () => {
       // 1. Check if we have a custom database session active (Instant)
       const savedCustom = localStorage.getItem('xebia_custom_user');
       if (savedCustom) {
@@ -75,9 +73,9 @@ export default function App() {
           setUserProfile(profile);
           setIsAdminMode(profile.role === 'Admin');
           
-          const progress = await getUserProgressFromDB(user.uid);
-          if (progress) {
-            setUserProgress(progress);
+          const localProgress = localStorage.getItem(`xebia_progress_${user.uid}`);
+          if (localProgress) {
+            setUserProgress(JSON.parse(localProgress));
           } else {
             setUserProgress(INITIAL_PROGRESS);
           }
@@ -110,93 +108,35 @@ export default function App() {
         }
       }
 
-      // 3. Fallback to standard Firebase Auth if no fast local session exists
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser && firebaseUser.emailVerified) {
-          setCurrentUser(firebaseUser);
-          
-          let profile = await getUserProfile(firebaseUser.uid);
-          if (!profile) {
-            profile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || 'Enterprise Learner',
-              role: 'Student',
-              title: 'Senior Cloud Architect',
-              createdAt: new Date().toISOString()
-            };
-            try {
-              await createUserProfile(firebaseUser.uid, {
-                email: profile.email,
-                displayName: profile.displayName,
-                role: profile.role,
-                title: profile.title
-              });
-            } catch (e) {
-              console.error("Failed to auto-create user profile in auth listener:", e);
-            }
-          }
-          setUserProfile(profile);
-
-          const progress = await getUserProgressFromDB(firebaseUser.uid);
-          if (progress) {
-            setUserProgress(progress);
-          } else {
-            await saveUserProgressToDB(firebaseUser.uid, INITIAL_PROGRESS);
-            setUserProgress(INITIAL_PROGRESS);
-          }
-        } else {
-          setCurrentUser(null);
-          setUserProfile(null);
-          setUserProgress(INITIAL_PROGRESS);
-          setIsAdminMode(false);
-        }
-        setIsAuthLoading(false);
-      });
-
-      return () => unsubscribe();
+      // No active local sandbox session found
+      setCurrentUser(null);
+      setUserProfile(null);
+      setUserProgress(INITIAL_PROGRESS);
+      setIsAdminMode(false);
+      setIsAuthLoading(false);
     };
 
     restoreSession();
   }, []);
 
-  // Synchronize progress to Firestore on changes
+  // Synchronize progress to offline Sandbox storage on changes
   useEffect(() => {
     if (currentUser && !isAuthLoading && userProgress) {
-      if (currentUser.uid.startsWith('demo-')) {
-        localStorage.setItem(`xebia_progress_${currentUser.uid}`, JSON.stringify(userProgress));
-      } else {
-        const syncProgress = async () => {
-          try {
-            await saveUserProgressToDB(currentUser.uid, userProgress);
-          } catch (e) {
-            console.error("Error syncing progress to Firestore:", e);
-          }
-        };
-
-        const timeoutId = setTimeout(syncProgress, 500);
-        return () => clearTimeout(timeoutId);
-      }
+      localStorage.setItem(`xebia_progress_${currentUser.uid}`, JSON.stringify(userProgress));
     }
   }, [userProgress, currentUser, isAuthLoading]);
 
   // Handle Logout
-  const handleLogout = async () => {
-    try {
-      setIsAuthLoading(true);
-      localStorage.removeItem('xebia_demo_user');
-      localStorage.removeItem('xebia_custom_user');
-      await signOut(auth);
-      setCurrentUser(null);
-      setUserProfile(null);
-      setUserProgress(INITIAL_PROGRESS);
-      setCurrentTab('home');
-      setIsAdminMode(false);
-    } catch (e) {
-      console.error('Logout error:', e);
-    } finally {
-      setIsAuthLoading(false);
-    }
+  const handleLogout = () => {
+    setIsAuthLoading(true);
+    localStorage.removeItem('xebia_demo_user');
+    localStorage.removeItem('xebia_custom_user');
+    setCurrentUser(null);
+    setUserProfile(null);
+    setUserProgress(INITIAL_PROGRESS);
+    setCurrentTab('home');
+    setIsAdminMode(false);
+    setIsAuthLoading(false);
   };
 
   // Handle Enrollment
@@ -316,6 +256,27 @@ export default function App() {
     );
   }
 
+  if (!currentUser) {
+    return (
+      <Auth
+        onAuthSuccess={async (user, profile) => {
+          setIsAuthLoading(true);
+          setCurrentUser(user);
+          setUserProfile(profile);
+          setIsAdminMode(profile?.role === 'Admin');
+
+          const localProgress = localStorage.getItem(`xebia_progress_${user.uid}`);
+          if (localProgress) {
+            setUserProgress(JSON.parse(localProgress));
+          } else {
+            setUserProgress(INITIAL_PROGRESS);
+          }
+          setIsAuthLoading(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/50 relative" id="xebia-lms-root-layout">
       
@@ -327,7 +288,16 @@ export default function App() {
           if (tab !== 'player') setSelectedCourse(null);
         }}
         isAdminMode={isAdminMode}
-        setIsAdminMode={setIsAdminMode}
+        setIsAdminMode={(admin) => {
+          setIsAdminMode(admin);
+          if (userProfile) {
+            setUserProfile({
+              ...userProfile,
+              role: admin ? 'Admin' : 'Student',
+              title: admin ? 'Enterprise Principal LMS Admin' : 'Senior Frontend Architect'
+            });
+          }
+        }}
         streakDays={userProgress.streakDays}
         userProfile={userProfile}
         onLogout={handleLogout}
@@ -526,34 +496,14 @@ export default function App() {
                 onAuthSuccess={async (user, profile) => {
                   setIsAuthLoading(true);
                   setCurrentUser(user);
-                  
-                  // Use provided profile if available (e.g. from google / demo mode), otherwise fetch
-                  let activeProfile = profile;
-                  if (!activeProfile) {
-                    try {
-                      activeProfile = await getUserProfile(user.uid);
-                    } catch (e) {
-                      console.error("Error fetching user profile:", e);
-                    }
-                  }
-                  setUserProfile(activeProfile);
-                  setIsAdminMode(activeProfile?.role === 'Admin');
+                  setUserProfile(profile);
+                  setIsAdminMode(profile?.role === 'Admin');
 
-                  if (user.uid.startsWith('demo-')) {
-                    const localProgress = localStorage.getItem(`xebia_progress_${user.uid}`);
-                    if (localProgress) {
-                      setUserProgress(JSON.parse(localProgress));
-                    } else {
-                      setUserProgress(INITIAL_PROGRESS);
-                    }
+                  const localProgress = localStorage.getItem(`xebia_progress_${user.uid}`);
+                  if (localProgress) {
+                    setUserProgress(JSON.parse(localProgress));
                   } else {
-                    const progress = await getUserProgressFromDB(user.uid);
-                    if (progress) {
-                      setUserProgress(progress);
-                    } else {
-                      await saveUserProgressToDB(user.uid, INITIAL_PROGRESS);
-                      setUserProgress(INITIAL_PROGRESS);
-                    }
+                    setUserProgress(INITIAL_PROGRESS);
                   }
                   setShowAuthOverlay(false);
                   setIsAuthLoading(false);

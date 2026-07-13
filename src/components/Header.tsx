@@ -140,12 +140,8 @@ export default function Header({
             </button>
             <button
               onClick={() => {
-                if (userProfile?.role === 'Admin') {
-                  setIsAdminMode(true);
-                  setCurrentTab('admin');
-                } else {
-                  onOpenAuth('Admin');
-                }
+                setIsAdminMode(true);
+                setCurrentTab('admin');
               }}
               className={`rounded-full px-2.5 py-0.5 font-bold transition-all cursor-pointer flex items-center space-x-1 ${
                 isAdminMode 
@@ -153,10 +149,9 @@ export default function Header({
                   : 'text-slate-500'
               }`}
               id="role-switch-admin"
-              title={userProfile?.role !== 'Admin' ? "Admin Access Restricted (Click to Sign In as Admin)" : "Switch to Admin Dashboard"}
+              title="Switch to Admin Dashboard"
             >
               <span>Admin</span>
-              {userProfile?.role !== 'Admin' && <span className="text-[9px] opacity-70">🔒</span>}
             </button>
           </div>
 

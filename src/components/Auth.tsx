@@ -1,19 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  sendEmailVerification, 
-  updateProfile,
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup
-} from 'firebase/auth';
-import { auth, createUserProfile, saveUserProgressToDB, getUserProfile, registerCustomUser, loginCustomUser } from '../lib/firebase';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Lock, User, Briefcase, Award, ArrowRight, ShieldCheck, RefreshCw, LogOut, Check, X } from 'lucide-react';
+import { User, Award, ArrowRight, X, Sparkles, Shield, Info } from 'lucide-react';
 import XebiaLogo from './XebiaLogo';
 import XebiaLiveBackground from './XebiaLiveBackground';
-import { UserProgress } from '../types';
 
 interface AuthProps {
   onAuthSuccess: (user: any, profile: any) => void;
@@ -21,111 +10,11 @@ interface AuthProps {
   onClose?: () => void;
 }
 
-export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps) {
-  const [isLogin, setIsLogin] = useState<boolean>(true);
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [displayName, setDisplayName] = useState<string>('');
-  const [title, setTitle] = useState<string>('Frontend Engineer');
-  const [role, setRole] = useState<'Student' | 'Admin'>(initialRole || 'Student');
-  
-  // Sync initialRole when it changes
-  useEffect(() => {
-    if (initialRole) {
-      setRole(initialRole);
-    }
-  }, [initialRole]);
-  
-  // States for verification and loading
+export default function Auth({ onAuthSuccess, onClose }: AuthProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
-  const [verificationPending, setVerificationPending] = useState<boolean>(false);
-  const [tempUser, setTempUser] = useState<any>(null);
-
-  const handleGoogleSignIn = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setError(null);
-    setInfoMessage(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-
-      // When signing in with Google, we check if they already have a custom profile in Firestore
-      let profile = await getUserProfile(user.uid);
-      if (!profile) {
-        // If not, we create one.
-        const selectedTitle = !isLogin ? title : 'Senior Cloud Architect';
-        const selectedRole = !isLogin ? role : 'Student';
-        
-        const profileData = {
-          email: user.email || '',
-          displayName: user.displayName || 'Google Learner',
-          role: selectedRole,
-          title: selectedTitle
-        };
-        await createUserProfile(user.uid, profileData);
-        
-        // Seed initial progress for them
-        const initialProgress: UserProgress = {
-          enrolledCourseIds: ['course-aws-arch', 'course-scrum-master'],
-          completedLessons: ['aws-l1', 'aws-l2', 'scrum-l1'],
-          courseCompletion: {
-            'course-aws-arch': 65,
-            'course-scrum-master': 13
-          },
-          completedCourseIds: [],
-          streakDays: 5,
-          lastActiveDate: new Date().toISOString().split('T')[0],
-          skillsMastered: ['VPC Networking', 'Scrum Values'],
-          certificates: [],
-          activeTab: 'home'
-        };
-        await saveUserProgressToDB(user.uid, initialProgress);
-        
-        profile = {
-          uid: user.uid,
-          createdAt: new Date().toISOString(),
-          ...profileData
-        };
-      }
-
-      onAuthSuccess(user, profile);
-    } catch (err: any) {
-      console.error(err);
-      if (err.code === 'auth/unauthorized-domain') {
-        setError(
-          `🔒 Firebase Domain Restriction Detected!\n\n` +
-          `To allow login from this domain, please add it to your Firebase Project's Authorized Domains:\n\n` +
-          `1. Go to your Firebase Console -> Authentication -> Settings tab.\n` +
-          `2. Under 'Authorized domains', click 'Add domain'.\n` +
-          `3. Paste this exact domain:\n   👉 ${window.location.hostname}\n\n` +
-          `⚡ Workaround: You can bypass this restriction and log in immediately using the emerald "1-Click Fast Login" buttons above!`
-        );
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        setError(
-          `⚠️ Multiple sign-in windows detected.\n\n` +
-          `A Google sign-in window was already opened. Please complete the sign-in in that window, or wait a few seconds and try clicking again.`
-        );
-      } else if (err.code === 'auth/popup-blocked') {
-        setError(
-          `🚫 Pop-up Blocked!\n\n` +
-          `Your browser blocked the Google Sign-in pop-up window. Please enable pop-ups for this site or use our "1-Click Fast Login" option.`
-        );
-      } else if (err.code !== 'auth/popup-closed-by-user') {
-        setError(err.message || 'An error occurred during Google authentication.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleDemoSignIn = (selectedRole: 'Student' | 'Admin') => {
     setIsLoading(true);
-    setError(null);
-    setInfoMessage(null);
     
     const demoUid = `demo-${selectedRole.toLowerCase()}-user`;
     const demoUser = {
@@ -152,104 +41,8 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
     setIsLoading(false);
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setInfoMessage(null);
-
-    try {
-      if (isLogin) {
-        // Direct Database Sign In (Fast and Independent of Firebase Auth)
-        if (!email.trim() || !password.trim()) {
-          throw new Error('Please fill in all fields.');
-        }
-
-        const { user, profile } = await loginCustomUser(email, password);
-
-        // Store active session in localStorage for 0ms page restore
-        localStorage.setItem('xebia_custom_user', JSON.stringify({ user, profile }));
-        
-        onAuthSuccess(user, profile);
-      } else {
-        // Direct Database Register
-        if (!displayName.trim()) {
-          throw new Error('Please enter your full name.');
-        }
-        if (!email.trim() || !password.trim()) {
-          throw new Error('Please fill in all fields.');
-        }
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters.');
-        }
-
-        const { user, profile } = await registerCustomUser(email, password, displayName, role, title);
-
-        // Store active session in localStorage for 0ms page restore
-        localStorage.setItem('xebia_custom_user', JSON.stringify({ user, profile }));
-
-        setInfoMessage('Account created successfully! Logging you in...');
-        setTimeout(() => {
-          onAuthSuccess(user, profile);
-        }, 800);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'An error occurred during authentication.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const checkVerificationStatus = async () => {
-    if (!auth.currentUser && !tempUser) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const user = auth.currentUser || tempUser;
-      await user.reload();
-      
-      if (user.emailVerified) {
-        setVerificationPending(false);
-        onAuthSuccess(user, null);
-      } else {
-        setError('Email not verified yet. Please click the link in your email and try again.');
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError('Failed to refresh status. Try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resendVerification = async () => {
-    const user = auth.currentUser || tempUser;
-    if (!user) return;
-    setIsLoading(true);
-    setError(null);
-    setInfoMessage(null);
-    try {
-      await sendEmailVerification(user);
-      setInfoMessage('A fresh verification link has been sent to your email.');
-    } catch (err: any) {
-      console.error(err);
-      setError('Too many requests. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancelVerification = async () => {
-    await signOut(auth);
-    setTempUser(null);
-    setVerificationPending(false);
-    setError(null);
-    setInfoMessage(null);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-[#0B090F] px-4 py-12 sm:px-6 lg:px-8" id="auth-screen">
+    <div className="min-h-screen flex items-center justify-center relative bg-[#0B090F] px-4 py-12 sm:px-6 lg:px-8 animate-fade-in" id="auth-screen">
       
       {/* Background Animated Waves */}
       <XebiaLiveBackground variant="dark" interactive={true} />
@@ -268,324 +61,78 @@ export default function Auth({ onAuthSuccess, initialRole, onClose }: AuthProps)
         )}
         
         {/* Branding */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 text-white">
           <XebiaLogo height={32} textColor="#FFFFFF" className="mx-auto" />
           <p className="text-xs uppercase tracking-[0.25em] text-[#FF5A36] font-mono font-bold pt-1">
             Academy Enterprise LMS
           </p>
         </div>
 
-        {/* Dynamic Inner Container */}
-        <div className="mt-6">
-          {verificationPending ? (
-            /* Verification Screen */
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-6 text-center text-slate-200"
-              id="verification-pending-view"
-            >
-              <div className="mx-auto h-16 w-16 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                <Mail className="h-8 w-8 animate-bounce" />
-              </div>
+        {/* Simplified Direct Sandbox Entrance Option */}
+        <div className="space-y-6">
+          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-5 text-center space-y-4 shadow-lg shadow-emerald-950/20" id="fast-access-container">
+            <div className="flex items-center justify-center space-x-2 text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider font-mono">⚡ 1-Click Fast Sandbox Access</span>
+            </div>
+            
+            <p className="text-[12px] text-slate-300 leading-relaxed font-sans">
+              Welcome to the corporate training workspace. Select your sandbox access credentials below to enter immediately with persistent local storage.
+            </p>
 
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold font-display text-white">Verify your email address</h3>
-                <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-                  We've sent a verification link to <strong className="text-white">{(auth.currentUser || tempUser)?.email}</strong>. Please check your inbox or spam folder.
-                </p>
-              </div>
-
-              {error && (
-                <div className="p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 text-left whitespace-pre-line">
-                  {error}
-                </div>
-              )}
-
-              {infoMessage && (
-                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 text-left flex items-start space-x-2">
-                  <Check className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
-                  <span>{infoMessage}</span>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={checkVerificationStatus}
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-[#831B84] to-purple-600 hover:from-[#9c259d] hover:to-purple-500 text-white font-bold text-xs py-3.5 rounded-xl transition-all shadow-lg cursor-pointer disabled:opacity-50"
-                  id="btn-verify-status"
-                >
-                  {isLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldCheck className="h-4 w-4" />
-                      <span>I have verified my email</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={resendVerification}
-                    disabled={isLoading}
-                    className="flex items-center justify-center space-x-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 py-3 rounded-xl transition-all cursor-pointer"
-                    id="btn-resend-verify"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    <span>Resend Email</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleCancelVerification}
-                    className="flex items-center justify-center space-x-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 py-3 rounded-xl transition-all cursor-pointer"
-                    id="btn-verify-cancel"
-                  >
-                    <LogOut className="h-3 w-3" />
-                    <span>Cancel / Out</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            /* Login/Registration Form */
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-6"
-            >
-              {/* ⚡ Fast 1-Click Instant Access (Recommended) */}
-              <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 text-center space-y-3 shadow-lg shadow-emerald-950/20" id="fast-access-container">
-                <div className="flex items-center justify-center space-x-1.5 text-emerald-400">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider font-mono">⚡ 1-Click Fast Login (Recommended)</span>
-                </div>
-                <p className="text-[11.5px] text-slate-300 leading-normal font-sans">
-                  Instantly bypass Google iframe/domain authorization restrictions and experience the full Enterprise LMS Academy in under 0.1 seconds!
-                </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleDemoSignIn('Student')}
-                    className="flex items-center justify-center space-x-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer shadow-md active:scale-95"
-                    id="fast-student-btn"
-                  >
-                    <span>Enter as Student</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoSignIn('Admin')}
-                    className="flex items-center justify-center space-x-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer shadow-md active:scale-95"
-                    id="fast-admin-btn"
-                  >
-                    <span>Enter as Admin</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Tab Selector */}
-              <div className="grid grid-cols-2 bg-white/5 rounded-2xl p-1 border border-white/5" id="auth-mode-tabs">
-                <button
-                  type="button"
-                  onClick={() => { setIsLogin(true); setError(null); }}
-                  className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                  id="tab-auth-login"
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setIsLogin(false); setError(null); }}
-                  className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    !isLogin ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                  id="tab-auth-register"
-                >
-                  Create Account
-                </button>
-              </div>
-
-              {/* Error Box */}
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-xl text-xs text-red-300 text-left font-medium whitespace-pre-line"
-                  id="auth-error-box"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              {/* Form elements */}
-              <form onSubmit={handleAuth} className="space-y-4 text-left">
-                
-                {/* Full name (Register mode only) */}
-                {!isLogin && (
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider font-mono">Full Name</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="e.g. Sarah Jenkins"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#831B84] focus:border-[#831B84] transition-all"
-                        id="auth-input-fullname"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Email input */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider font-mono">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. sarah.jenkins@company.com"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#831B84] focus:border-[#831B84] transition-all"
-                      id="auth-input-email"
-                    />
-                  </div>
-                </div>
-
-                {/* Password input */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider font-mono">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={isLogin ? "Enter your password" : "Min. 6 characters"}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#831B84] focus:border-[#831B84] transition-all"
-                      id="auth-input-password"
-                    />
-                  </div>
-                </div>
-
-                {/* Title and Role (Register mode only) */}
-                {!isLogin && (
-                  <>
-                    {/* Job Title */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider font-mono">Professional Title</label>
-                      <div className="relative">
-                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <select
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          className="w-full bg-[#171321] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#831B84] focus:border-[#831B84] transition-all appearance-none cursor-pointer"
-                          id="auth-input-title"
-                        >
-                          <option value="Frontend Engineer">Frontend Engineer</option>
-                          <option value="Senior Cloud Architect">Senior Cloud Architect</option>
-                          <option value="DevOps & Kubernetes Engineer">DevOps & Kubernetes Engineer</option>
-                          <option value="Agile Coach & Consultant">Agile Coach & Consultant</option>
-                          <option value="Director of Engineering">Director of Engineering</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Role Selection */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-purple-300 uppercase tracking-wider font-mono">Select Role</label>
-                      <div className="grid grid-cols-2 gap-3" id="auth-role-selectors">
-                        <button
-                          type="button"
-                          onClick={() => setRole('Student')}
-                          className={`flex items-center justify-center space-x-1.5 py-2.5 text-xs rounded-xl border transition-all cursor-pointer ${
-                            role === 'Student'
-                              ? 'bg-gradient-to-r from-[#831B84] to-purple-800 border-transparent text-white font-bold'
-                              : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
-                          }`}
-                          id="role-select-student"
-                        >
-                          <User className="h-3.5 w-3.5" />
-                          <span>Student</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setRole('Admin')}
-                          className={`flex items-center justify-center space-x-1.5 py-2.5 text-xs rounded-xl border transition-all cursor-pointer ${
-                            role === 'Admin'
-                              ? 'bg-gradient-to-r from-[#FF5A36] to-orange-700 border-transparent text-white font-bold'
-                              : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
-                          }`}
-                          id="role-select-admin"
-                        >
-                          <Award className="h-3.5 w-3.5" />
-                          <span>Admin</span>
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full mt-6 bg-gradient-to-r from-[#831B84] via-[#c449c5] to-[#FF5A36] hover:brightness-110 text-white font-bold text-xs py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
-                  id="auth-submit-btn"
-                >
-                  {isLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{isLogin ? 'Sign In to Portal' : 'Register Custom Account'}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  )}
-                </button>
-
-              </form>
-
-              {/* Divider */}
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-white/10"></div>
-                <span className="flex-shrink mx-4 text-[10px] text-slate-400 font-mono uppercase tracking-wider">Or continue with</span>
-                <div className="flex-grow border-t border-white/10"></div>
-              </div>
-
-              {/* Google Sign In Button */}
+            <div className="flex flex-col gap-3 pt-2">
+              {/* Student Entry */}
               <button
                 type="button"
-                onClick={handleGoogleSignIn}
+                onClick={() => handleDemoSignIn('Student')}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/15 hover:border-white/25 text-white font-bold text-xs py-3.5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                id="auth-google-btn"
+                className="w-full flex items-center justify-between bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs p-4 rounded-xl transition-all cursor-pointer shadow-md active:scale-98 disabled:opacity-50 text-left group"
+                id="fast-student-btn"
               >
-                <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-                </svg>
-                <span>{isLogin ? 'Sign In with Google' : 'Register with Google'}</span>
+                <div className="flex items-center space-x-3">
+                  <span className="p-2 bg-white/10 rounded-lg text-emerald-100">
+                    <User className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <div className="font-bold">Enter as Student</div>
+                    <div className="text-[10px] text-emerald-100/70 font-normal mt-0.5">Study, practice subnets, & get certified</div>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-emerald-100 group-hover:translate-x-1 transition-transform" />
               </button>
 
-            </motion.div>
-          )}
+              {/* Admin Entry */}
+              <button
+                type="button"
+                onClick={() => handleDemoSignIn('Admin')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-between bg-gradient-to-r from-[#FF5A36] to-orange-500 hover:brightness-110 text-white font-bold text-xs p-4 rounded-xl transition-all cursor-pointer shadow-md active:scale-98 disabled:opacity-50 text-left group"
+                id="fast-admin-btn"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="p-2 bg-white/10 rounded-lg text-orange-100">
+                    <Award className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <div className="font-bold">Enter as Admin</div>
+                    <div className="text-[10px] text-orange-100/70 font-normal mt-0.5">Track team analytics & oversee credentials</div>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-orange-100 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Security Info */}
+          <div className="flex items-start space-x-2.5 p-3 bg-white/5 rounded-xl border border-white/5 text-[10.5px] text-slate-400 leading-normal text-left">
+            <Info className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+            <p>
+              Your security and credentials are fully isolated inside this Sandbox session. Clear your browser cache at any time to reset your student pathways.
+            </p>
+          </div>
         </div>
 
       </div>

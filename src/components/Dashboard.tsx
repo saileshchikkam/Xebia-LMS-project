@@ -1,7 +1,7 @@
 import React from 'react';
 import { Course, UserProgress } from '../types';
 import { COURSES } from '../data';
-import { Calendar, PlayCircle, Sparkles, Trophy, Search, ArrowRight } from 'lucide-react';
+import { Calendar, PlayCircle, Sparkles, Trophy, Search, ArrowRight, HardDrive } from 'lucide-react';
 import { motion } from 'motion/react';
 import XebiaLogo from './XebiaLogo';
 import XebiaLiveBackground from './XebiaLiveBackground';
@@ -272,6 +272,27 @@ export default function Dashboard({
                 <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400 font-mono">NOV 03</span>
               </div>
 
+            </div>
+          </div>
+
+          {/* Enterprise Sandbox Status Card */}
+          <div className="bg-white border border-gray-100 p-6 rounded-3xl shadow-xs text-left flex flex-col justify-between space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold flex items-center gap-2 font-sans text-black">
+                  <HardDrive className="h-4.5 w-4.5 text-emerald-500" /> Enterprise Sandbox
+                </h3>
+                <span className="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  ACTIVE
+                </span>
+              </div>
+              <p className="text-[11.5px] text-gray-500 leading-relaxed">
+                You are currently running in Sandbox mode. Your enrolled courses, certifications, and learning progress are saved securely inside your browser's persistent storage.
+              </p>
+            </div>
+            
+            <div className="w-full bg-gray-50 text-gray-500 font-semibold text-xs py-2.5 rounded-xl border border-gray-100 text-center select-none">
+              ⚡ Local Database Sync Connected
             </div>
           </div>
 
