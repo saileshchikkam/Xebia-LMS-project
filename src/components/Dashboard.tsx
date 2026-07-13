@@ -77,7 +77,7 @@ export default function Dashboard({
               <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-purple-300 block font-semibold">
                 Slogan Focus
               </span>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight font-display bg-gradient-to-r from-white via-purple-100 to-[#FF5A36] bg-clip-text text-transparent">
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight font-display bg-gradient-to-r from-white via-purple-100 to-[#681D5F] bg-clip-text text-transparent">
                 Shaping Tomorrow with AI Today
               </h2>
             </div>
@@ -119,7 +119,7 @@ export default function Dashboard({
 
             {/* Certificates Stats Card */}
             <div className="p-5 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex items-center gap-4 text-left min-w-[150px] shadow-lg">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#FF5A36] to-orange-600 flex items-center justify-center text-white shadow-md">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#681D5F] to-purple-600 flex items-center justify-center text-white shadow-md">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -325,7 +325,7 @@ export default function Dashboard({
             >
               View Leaderboard
             </button>
-            <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-[#FF5A36] rounded-full blur-2xl opacity-20 pointer-events-none"></div>
+            <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-[#681D5F] rounded-full blur-2xl opacity-20 pointer-events-none"></div>
           </div>
 
         </aside>

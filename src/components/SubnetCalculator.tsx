@@ -124,15 +124,15 @@ export default function SubnetCalculator() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(131,27,132,0.15),transparent)] pointer-events-none" />
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center space-x-2 rounded-full bg-[#831B84]/20 border border-[#831B84]/40 px-3.5 py-1 text-xs font-semibold text-purple-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#FF5A36] animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#681D5F] animate-pulse" />
             <span>Interactive Utilities Module</span>
           </div>
           
           <div className="space-y-1">
-            <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-[#FF5A36] block font-semibold">
+            <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-[#681D5F] block font-semibold">
               Calculations Hub
             </span>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight font-display bg-gradient-to-r from-white via-purple-100 to-[#FF5A36] bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight font-display bg-gradient-to-r from-white via-purple-100 to-[#681D5F] bg-clip-text text-transparent">
               Street / Subnet & Streak Calculator
             </h2>
           </div>
@@ -281,11 +281,11 @@ export default function SubnetCalculator() {
           
           {/* Streak Calculator Card */}
           <div className="bg-gradient-to-br from-[#1A1A1B] to-black text-white p-6 rounded-3xl relative overflow-hidden space-y-6 shadow-xl">
-            <div className="absolute top-0 right-0 w-36 h-36 bg-[#FF5A36] rounded-full blur-[80px] opacity-25 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-36 h-36 bg-[#681D5F] rounded-full blur-[80px] opacity-25 pointer-events-none" />
             
             <div className="relative z-10 flex items-center space-x-3">
-              <div className="p-2 bg-white/10 text-[#FF5A36] rounded-xl border border-white/10">
-                <Flame className="h-5.5 w-5.5 fill-[#FF5A36]" />
+              <div className="p-2 bg-white/10 text-[#681D5F] rounded-xl border border-white/10">
+                <Flame className="h-5.5 w-5.5 fill-[#681D5F]" />
               </div>
               <div>
                 <h4 className="font-bold text-sm text-white">Study Streak Milestone Goal</h4>
@@ -305,7 +305,7 @@ export default function SubnetCalculator() {
                     max="100"
                     value={currentStreak}
                     onChange={(e) => setCurrentStreak(Number(e.target.value))}
-                    className="flex-1 accent-[#FF5A36] bg-white/10 h-1.5 rounded-full"
+                    className="flex-1 accent-[#681D5F] bg-white/10 h-1.5 rounded-full"
                   />
                   <span className="font-mono text-sm font-bold text-white bg-white/10 px-2.5 py-1 rounded-md shrink-0 border border-white/5">
                     {currentStreak} Days
@@ -323,9 +323,9 @@ export default function SubnetCalculator() {
                     step="0.5"
                     value={dailyHours}
                     onChange={(e) => setDailyHours(Number(e.target.value))}
-                    className="flex-1 accent-[#FF5A36] bg-white/10 h-1.5 rounded-full"
+                    className="flex-1 accent-[#681D5F] bg-white/10 h-1.5 rounded-full"
                   />
-                  <span className="font-mono text-sm font-bold text-[#FF5A36] bg-[#FF5A36]/10 px-2.5 py-1 rounded-md shrink-0 border border-[#FF5A36]/20">
+                  <span className="font-mono text-sm font-bold text-[#681D5F] bg-[#681D5F]/10 px-2.5 py-1 rounded-md shrink-0 border border-[#681D5F]/20">
                     {dailyHours}h/day
                   </span>
                 </div>
@@ -336,7 +336,7 @@ export default function SubnetCalculator() {
                 <select
                   value={targetCert}
                   onChange={(e) => setTargetCert(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#FF5A36]/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#681D5F]/50"
                 >
                   <option value="aws-arch" className="bg-slate-900">AWS Enterprise Architecture (24h)</option>
                   <option value="k8s-prod" className="bg-slate-900">Kubernetes Operations (32h)</option>
@@ -367,14 +367,14 @@ export default function SubnetCalculator() {
                 </div>
                 <div className="flex justify-between border-t border-white/5 pt-2.5">
                   <span className="text-slate-400">Projected points bonus:</span>
-                  <span className="font-mono text-[#FF5A36] font-bold">+{streakDetails.pointsEarned} Xebia Points</span>
+                  <span className="font-mono text-[#681D5F] font-bold">+{streakDetails.pointsEarned} Xebia Points</span>
                 </div>
               </div>
 
-              <div className="bg-[#FF5A36]/10 border border-[#FF5A36]/30 p-3 rounded-xl flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#FF5A36] shrink-0" />
+              <div className="bg-[#681D5F]/10 border border-[#681D5F]/30 p-3 rounded-xl flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[#681D5F] shrink-0" />
                 <p className="text-[10px] text-slate-300 leading-tight">
-                  Maintaining this streak guarantees unlocking the <span className="text-[#FF5A36] font-bold">Xebia Enterprise Architect Badge</span> in {streakDetails.daysNeeded} days!
+                  Maintaining this streak guarantees unlocking the <span className="text-[#681D5F] font-bold">Xebia Enterprise Architect Badge</span> in {streakDetails.daysNeeded} days!
                 </p>
               </div>
             </div>

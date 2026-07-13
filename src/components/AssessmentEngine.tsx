@@ -71,12 +71,12 @@ export default function AssessmentEngine({
           <XebiaLiveBackground variant="dark" interactive={false} />
           
           <div className="relative z-10 max-w-3xl space-y-2">
-            <div className="inline-flex items-center space-x-2 rounded-full bg-white/10 border border-white/20 px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#FF5A36]">
+            <div className="inline-flex items-center space-x-2 rounded-full bg-white/10 border border-white/20 px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#681D5F]">
               Verified Credentials
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-light tracking-tight text-white flex items-center space-x-3">
-              <Award className="h-8 w-8 text-[#FF5A36] shrink-0" />
-              <span>Interactive <span className="font-bold bg-gradient-to-r from-purple-300 to-[#FF5A36] bg-clip-text text-transparent">Certification Hub</span></span>
+              <Award className="h-8 w-8 text-[#681D5F] shrink-0" />
+              <span>Interactive <span className="font-bold bg-gradient-to-r from-purple-300 to-[#681D5F] bg-clip-text text-transparent">Certification Hub</span></span>
             </h2>
             <p className="text-xs md:text-sm text-slate-300 font-serif italic max-w-xl">
               Validate your specialized expertise. Take gamified diagnostic compliance tests, unlock verifiable credentials, and review comprehensive practitioner explanations.
@@ -149,8 +149,8 @@ export default function AssessmentEngine({
             {examFinished ? (
               <div className="space-y-6 text-center" id="assessment-finished-pane">
                 <div className="py-4 space-y-3">
-                  <div className="mx-auto h-20 w-20 rounded-full bg-purple-50 border-4 border-purple-100 flex items-center justify-center text-xebia-purple shadow-inner">
-                    <Trophy className="h-10 w-10 text-xebia-orange fill-xebia-orange animate-bounce" />
+                  <div className="mx-auto h-20 w-20 rounded-full bg-purple-50 border-4 border-purple-100 flex items-center justify-center text-xebia-brand shadow-inner">
+                    <Trophy className="h-10 w-10 text-xebia-brand fill-xebia-brand animate-bounce" />
                   </div>
                   <h3 className="font-display text-xl font-extrabold text-slate-900">Assessment Complete!</h3>
                   <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">

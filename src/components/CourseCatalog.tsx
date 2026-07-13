@@ -56,18 +56,18 @@ export default function CourseCatalog({
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8" id="catalog-section">
       
       {/* Title block with live animated light theme banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 mb-10 text-left border border-slate-800 shadow-xl" id="catalog-header-card">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#681D5F]/10 via-purple-50/50 to-indigo-50 border border-purple-100 p-8 mb-10 text-left shadow-sm" id="catalog-header-card">
         {/* Subtle, beautiful live background animation for the catalog */}
-        <XebiaLiveBackground variant="dark" interactive={false} />
+        <XebiaLiveBackground variant="light" interactive={false} />
         
         <div className="relative z-10 max-w-3xl space-y-2">
-          <div className="inline-flex items-center space-x-2 rounded-full bg-white/10 border border-white/20 px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#FF5A36]">
+          <div className="inline-flex items-center space-x-2 rounded-full bg-[#681D5F]/10 border border-[#681D5F]/20 px-3 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#681D5F]">
             Interactive Library
           </div>
-          <h2 className="font-display text-3xl md:text-4xl font-light tracking-tight text-white">
-            Professional <span className="font-bold bg-gradient-to-r from-[#FF5A36] to-pink-400 bg-clip-text text-transparent">Course Library</span>
+          <h2 className="font-display text-3xl md:text-4xl font-light tracking-tight text-slate-900">
+            Professional <span className="font-bold bg-gradient-to-r from-[#681D5F] to-purple-600 bg-clip-text text-transparent">Course Library</span>
           </h2>
-          <p className="text-xs md:text-sm text-slate-300 font-serif italic max-w-xl">
+          <p className="text-xs md:text-sm text-slate-600 font-serif italic max-w-xl">
             Curated by senior Xebia global practitioners to build production-ready digital capabilities, systems architecting, and hands-on engineering excellence.
           </p>
         </div>
@@ -141,7 +141,7 @@ export default function CourseCatalog({
                   onClick={() => setSelectedLevel(lvl)}
                   className={`text-center lg:text-left text-xs font-medium px-3 py-2 rounded-lg transition-all cursor-pointer ${
                     selectedLevel === lvl
-                      ? 'bg-[#1A1A1B] text-white font-semibold'
+                      ? 'bg-[#681D5F] text-white font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >

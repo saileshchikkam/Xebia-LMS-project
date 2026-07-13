@@ -117,9 +117,9 @@ export default function Header({
         <div className="flex items-center gap-4" id="xebia-header-actions">
           
           {/* Active streak info in a super clean, minimal format */}
-          <div className="hidden sm:flex items-center space-x-1 rounded-full bg-[#FFF4ED] px-2.5 py-1 text-xebia-orange border border-[#FF5A36]/10" title="Active streak!">
-            <Flame className="h-3.5 w-3.5 fill-[#FF5A36] text-[#FF5A36]" />
-            <span className="font-mono text-[11px] font-bold text-[#FF5A36]">{streakDays}d Streak</span>
+          <div className="hidden sm:flex items-center space-x-1 rounded-full bg-purple-500/10 px-2.5 py-1 text-xebia-orange border border-[#681D5F]/10" title="Active streak!">
+            <Flame className="h-3.5 w-3.5 fill-[#681D5F] text-[#681D5F]" />
+            <span className="font-mono text-[11px] font-bold text-[#681D5F]">{streakDays}d Streak</span>
           </div>
 
           {/* Elegant Role Toggle */}
@@ -198,7 +198,7 @@ export default function Header({
               </button>
               <button
                 onClick={() => onOpenAuth('Admin')}
-                className="text-xs font-bold bg-[#FF5A36] hover:bg-[#FF5A36]/90 text-white px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="text-xs font-bold bg-[#681D5F] hover:bg-[#681D5F]/90 text-white px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-sm"
                 id="btn-header-admin-login"
                 title="Admin login and metrics"
               >

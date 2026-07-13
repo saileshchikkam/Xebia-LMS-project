@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { User, Award, ArrowRight, X, Sparkles, Shield, Info } from 'lucide-react';
+import { User, Award, ArrowRight, X, Info } from 'lucide-react';
 import XebiaLogo from './XebiaLogo';
 import XebiaLiveBackground from './XebiaLiveBackground';
 
@@ -47,7 +47,7 @@ export default function Auth({ onAuthSuccess, onClose }: AuthProps) {
       {/* Background Animated Waves */}
       <XebiaLiveBackground variant="dark" interactive={true} />
 
-      <div className="relative z-10 w-full max-w-md space-y-8 bg-white/10 backdrop-blur-2xl p-8 rounded-3xl border border-white/15 shadow-2xl">
+      <div className="relative z-10 w-full max-w-md space-y-8 bg-[#0F0D15]/90 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 shadow-2xl">
         {onClose && (
           <button 
             onClick={onClose}
@@ -60,23 +60,23 @@ export default function Auth({ onAuthSuccess, onClose }: AuthProps) {
           </button>
         )}
         
-        {/* Branding */}
-        <div className="text-center space-y-2 text-white">
-          <XebiaLogo height={32} textColor="#FFFFFF" className="mx-auto" />
-          <p className="text-xs uppercase tracking-[0.25em] text-[#FF5A36] font-mono font-bold pt-1">
+        {/* Branding - Bigger logo as requested by user */}
+        <div className="text-center space-y-3 text-white">
+          <XebiaLogo height={42} textColor="#FFFFFF" className="mx-auto" />
+          <p className="text-xs uppercase tracking-[0.25em] text-[#681D5F] font-mono font-black pt-1">
             Academy Enterprise LMS
           </p>
         </div>
 
         {/* Simplified Direct Sandbox Entrance Option */}
         <div className="space-y-6">
-          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-5 text-center space-y-4 shadow-lg shadow-emerald-950/20" id="fast-access-container">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-5 text-center space-y-4 shadow-lg shadow-emerald-950/10" id="fast-access-container">
             <div className="flex items-center justify-center space-x-2 text-emerald-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider font-mono">⚡ 1-Click Fast Sandbox Access</span>
+              <span className="text-xs font-black uppercase tracking-widest font-mono">⚡ 1-Click Fast Sandbox Access</span>
             </div>
             
             <p className="text-[12px] text-slate-300 leading-relaxed font-sans">
@@ -89,7 +89,7 @@ export default function Auth({ onAuthSuccess, onClose }: AuthProps) {
                 type="button"
                 onClick={() => handleDemoSignIn('Student')}
                 disabled={isLoading}
-                className="w-full flex items-center justify-between bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs p-4 rounded-xl transition-all cursor-pointer shadow-md active:scale-98 disabled:opacity-50 text-left group"
+                className="w-full flex items-center justify-between bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-xs p-4 rounded-xl transition-all cursor-pointer shadow-md active:scale-98 disabled:opacity-50 text-left group"
                 id="fast-student-btn"
               >
                 <div className="flex items-center space-x-3">
@@ -97,31 +97,31 @@ export default function Auth({ onAuthSuccess, onClose }: AuthProps) {
                     <User className="h-4 w-4" />
                   </span>
                   <div>
-                    <div className="font-bold">Enter as Student</div>
-                    <div className="text-[10px] text-emerald-100/70 font-normal mt-0.5">Study, practice subnets, & get certified</div>
+                    <div className="font-extrabold text-xs uppercase tracking-wider">Enter as Student</div>
+                    <div className="text-[10px] text-emerald-100/70 font-normal mt-0.5 normal-case">Study, practice subnets, & get certified</div>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-emerald-100 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              {/* Admin Entry */}
+              {/* Admin Entry - Replaced Orange with 681D5F brand gradient */}
               <button
                 type="button"
                 onClick={() => handleDemoSignIn('Admin')}
                 disabled={isLoading}
-                className="w-full flex items-center justify-between bg-gradient-to-r from-[#FF5A36] to-orange-500 hover:brightness-110 text-white font-bold text-xs p-4 rounded-xl transition-all cursor-pointer shadow-md active:scale-98 disabled:opacity-50 text-left group"
+                className="w-full flex items-center justify-between bg-gradient-to-r from-[#681D5F] to-purple-600 hover:brightness-110 text-white font-extrabold text-xs p-4 rounded-xl transition-all cursor-pointer shadow-md active:scale-98 disabled:opacity-50 text-left group"
                 id="fast-admin-btn"
               >
                 <div className="flex items-center space-x-3">
-                  <span className="p-2 bg-white/10 rounded-lg text-orange-100">
+                  <span className="p-2 bg-white/10 rounded-lg text-purple-100">
                     <Award className="h-4 w-4" />
                   </span>
                   <div>
-                    <div className="font-bold">Enter as Admin</div>
-                    <div className="text-[10px] text-orange-100/70 font-normal mt-0.5">Track team analytics & oversee credentials</div>
+                    <div className="font-extrabold text-xs uppercase tracking-wider">Enter as Admin</div>
+                    <div className="text-[10px] text-purple-100/70 font-normal mt-0.5 normal-case">Track team analytics & oversee credentials</div>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-orange-100 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-4 w-4 text-purple-100 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>

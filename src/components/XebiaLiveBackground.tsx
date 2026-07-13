@@ -31,10 +31,10 @@ export default function XebiaLiveBackground({
 
   // Determine styles based on variant
   const bgClass = variant === 'dark' 
-    ? 'bg-gradient-to-br from-[#0F0E17] via-[#1F1124] to-[#0A030C]' 
+    ? 'bg-gradient-to-br from-[#09080E] via-[#1A0E1F] to-[#040106]' 
     : variant === 'subtle' 
     ? 'bg-transparent'
-    : 'bg-gradient-to-br from-purple-50/30 via-slate-50/50 to-pink-50/20';
+    : 'bg-gradient-to-br from-purple-50/20 via-slate-50/30 to-slate-100/40';
 
   return (
     <div className={`absolute inset-0 overflow-hidden select-none pointer-events-none z-0 ${bgClass} ${className}`}>
@@ -43,7 +43,7 @@ export default function XebiaLiveBackground({
       <motion.div 
         className="absolute w-[500px] h-[500px] rounded-full blur-[120px] mix-blend-screen opacity-40 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(131,27,132,0.3) 0%, rgba(255,90,54,0.05) 70%, rgba(0,0,0,0) 100%)',
+          background: 'radial-gradient(circle, rgba(203,46,186,0.35) 0%, rgba(203,46,186,0.05) 70%, rgba(0,0,0,0) 100%)',
           top: '10%',
           right: '5%',
         }}
@@ -57,7 +57,7 @@ export default function XebiaLiveBackground({
       <motion.div 
         className="absolute w-[600px] h-[600px] rounded-full blur-[140px] mix-blend-screen opacity-35 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(255,90,54,0.15) 0%, rgba(131,27,132,0.02) 80%, rgba(0,0,0,0) 100%)',
+          background: 'radial-gradient(circle, rgba(203,46,186,0.2) 0%, rgba(203,46,186,0.02) 80%, rgba(0,0,0,0) 100%)',
           bottom: '-10%',
           left: '5%',
         }}
@@ -70,7 +70,7 @@ export default function XebiaLiveBackground({
 
       {/* Grid Pattern overlays for depth */}
       <div 
-        className={`absolute inset-0 opacity-[0.07] ${variant === 'dark' ? 'bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)]' : 'bg-[linear-gradient(to_right,#831b84_1px,transparent_1px),linear-gradient(to_bottom,#831b84_1px,transparent_1px)]'} bg-[size:4rem_4rem]`}
+        className={`absolute inset-0 opacity-[0.06] ${variant === 'dark' ? 'bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)]' : 'bg-[linear-gradient(to_right,#cb2eba_1px,transparent_1px),linear-gradient(to_bottom,#cb2eba_1px,transparent_1px)]'} bg-[size:4rem_4rem]`}
         style={{
           maskImage: 'radial-gradient(ellipse 60% 50% at 50% 50%, #000 60%, transparent 100%)',
           WebkitMaskImage: 'radial-gradient(ellipse 60% 50% at 50% 50%, #000 60%, transparent 100%)'
@@ -81,21 +81,21 @@ export default function XebiaLiveBackground({
       <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="gradient-neon-pink" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#831B84" stopOpacity="0.8" />
+            <stop offset="0%" stopColor="#681D5F" stopOpacity="0.8" />
             <stop offset="50%" stopColor="#D946EF" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#FF5A36" stopOpacity="0" />
+            <stop offset="100%" stopColor="#681D5F" stopOpacity="0" />
           </linearGradient>
 
           <linearGradient id="gradient-neon-blue" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.7" />
-            <stop offset="50%" stopColor="#831B84" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#681D5F" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#EC4899" stopOpacity="0" />
           </linearGradient>
 
           <linearGradient id="gradient-orange-red" x1="0%" y1="0%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#FF5A36" stopOpacity="0.9" />
+            <stop offset="0%" stopColor="#681D5F" stopOpacity="0.9" />
             <stop offset="50%" stopColor="#EF4444" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#831B84" stopOpacity="0" />
+            <stop offset="100%" stopColor="#6D1563" stopOpacity="0" />
           </linearGradient>
 
           <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -165,7 +165,7 @@ export default function XebiaLiveBackground({
         />
 
         {/* Decorative Floating Dots / Tech Constellations */}
-        <g fill={variant === 'dark' ? '#ffffff' : '#831b84'} opacity="0.15">
+        <g fill={variant === 'dark' ? '#ffffff' : '#cb2eba'} opacity="0.15">
           <circle cx="15%" cy="25%" r="1.5" />
           <circle cx="45%" cy="75%" r="2" />
           <circle cx="75%" cy="35%" r="1" />
@@ -180,12 +180,12 @@ export default function XebiaLiveBackground({
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
-            className={`absolute w-1 h-1 rounded-full ${variant === 'dark' ? 'bg-white' : 'bg-[#831B84]'}`}
+            className={`absolute w-1 h-1 rounded-full ${variant === 'dark' ? 'bg-white' : 'bg-[#681D5F]'}`}
             style={{
               top: `${20 + (i * 12)}%`,
               left: `${15 + (i * 15) + (Math.sin(i) * 5)}%`,
               opacity: 0.3,
-              boxShadow: variant === 'dark' ? '0 0 10px rgba(255,255,255,0.8)' : '0 0 10px rgba(131,27,132,0.8)'
+              boxShadow: variant === 'dark' ? '0 0 10px rgba(255,255,255,0.8)' : '0 0 10px rgba(203,46,186,0.8)'
             }}
             animate={{
               y: [0, -30, 0],

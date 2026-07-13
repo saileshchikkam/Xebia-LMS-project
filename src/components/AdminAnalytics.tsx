@@ -185,7 +185,7 @@ export default function AdminAnalytics() {
                   contentStyle={{ backgroundColor: '#0F172A', borderRadius: '12px', border: 'none', color: '#fff' }}
                   labelClassName="text-slate-400 font-semibold text-xs"
                 />
-                <Bar dataKey="students" fill="#FF5A36" radius={[4, 4, 0, 0]} name="Active Enrolled Students" maxBarSize={32} />
+                <Bar dataKey="students" fill="#681D5F" radius={[4, 4, 0, 0]} name="Active Enrolled Students" maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
