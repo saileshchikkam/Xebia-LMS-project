@@ -1,0 +1,28 @@
+{
+  "collections": {
+    "users": {
+      "description": "Store custom user metadata such as full name, role, and corporate title.",
+      "schema": {
+        "uid": "string",
+        "email": "string",
+        "displayName": "string",
+        "role": "string",
+        "title": "string",
+        "createdAt": "string"
+      }
+    },
+    "userProgress": {
+      "description": "Store each student's learning progress, certificates, streak, and mastered skills.",
+      "schema": {
+        "enrolledCourseIds": "array",
+        "completedLessons": "array",
+        "courseCompletion": "map",
+        "completedCourseIds": "array",
+        "streakDays": "number",
+        "lastActiveDate": "string",
+        "skillsMastered": "array",
+        "certificates": "array"
+      }
+    }
+  }
+}

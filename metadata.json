@@ -1,0 +1,6 @@
+{
+  "name": "Xebia Enterprise LMS",
+  "description": "A high-fidelity interactive replica of the Xebia Enterprise LMS with advanced course paths, client-side persistence, real-time assessment modules, and analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
